@@ -32,14 +32,13 @@ jobs:
 
       - name: Build Debug APK
         env:
-          # Ограничиваем аппетит Gradle по памяти, чтобы AAPT2 не вылетал
           _JAVA_OPTIONS: "-Xmx4g"
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 -Dkotlin.incremental=false"
         run: |
           echo "ndk.dir=${ANDROID_HOME}/ndk/26.1.10909125" > local.properties
           echo "sdk.dir=${ANDROID_HOME}" >> local.properties
           export PATH=$PATH:$(go env GOPATH)/bin
-          # Запускаем сборку с флагом --no-daemon для стабильности в облаке
+          # Собираем всё, Gradle сам найдет нужную задачу
           ./gradlew assembleDebug -x lint --no-daemon
 
       - name: Upload APK
@@ -47,4 +46,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ArzabcWG-Debug-File
-          path: ui/build/outputs/apk/debug/*.apk
+          # Используем маску **, чтобы найти APK в любой папке build
+          path: "**/build/outputs/apk/debug/*.apk"
