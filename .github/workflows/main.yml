@@ -22,24 +22,30 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
+          # Отключаем кэш полностью, чтобы избежать ошибок с контрольными суммами
+          cache: false
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build Debug APK
         run: |
-          # Находим путь к последнему установленному NDK автоматически
+          # Находим NDK
           NDK_PATH=$(find $ANDROID_SDK_ROOT/ndk -maxdepth 1 -type d | sort -V | tail -n 1)
-          echo "Found NDK at: $NDK_PATH"
           
-          # Записываем его в local.properties
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
           echo "ndk.dir=$NDK_PATH" >> local.properties
           
-          # Настраиваем PATH для Go
           export PATH=$PATH:$(go env GOPATH)/bin
           
-          # Сборка с ограничением ресурсов для стабильности
+          # ГЕНЕРАЛЬНАЯ УБОРКА GO
+          cd tunnel
+          go clean -modcache
+          go mod download
+          go mod tidy
+          cd ..
+          
+          # Сборка
           ./gradlew assembleDebug -x lint --no-daemon -Dorg.gradle.parallel=false -Dorg.gradle.workers.max=1
 
       - name: Upload APK
