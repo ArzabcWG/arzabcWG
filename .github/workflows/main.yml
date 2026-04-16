@@ -31,20 +31,15 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Debug APK
-        env:
-          _JAVA_OPTIONS: "-Xmx4g"
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 -Dkotlin.incremental=false"
         run: |
           echo "ndk.dir=${ANDROID_HOME}/ndk/26.1.10909125" > local.properties
-          echo "sdk.dir=${ANDROID_HOME}" >> local.properties
           export PATH=$PATH:$(go env GOPATH)/bin
-          # Собираем всё, Gradle сам найдет нужную задачу
-          ./gradlew assembleDebug -x lint --no-daemon
+          # Запускаем сборку без демона и с принудительным ограничением потоков
+          ./gradlew assembleDebug -x lint --no-daemon -Dorg.gradle.parallel=false -Dorg.gradle.workers.max=1
 
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ArzabcWG-Debug-File
-          # Используем маску **, чтобы найти APK в любой папке build
           path: "**/build/outputs/apk/debug/*.apk"
