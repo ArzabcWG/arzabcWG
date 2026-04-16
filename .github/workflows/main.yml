@@ -18,16 +18,17 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # Устанавливаем конкретную версию NDK, которую любит WireGuard
       - name: Install NDK
         run: |
-          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125"
+          # Используем прямой путь к sdkmanager в GitHub Actions
+          ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build Debug APK
-        # Указываем путь к NDK через переменную окружения
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.1.10909125
-        run: ./gradlew assembleDebug -x lint
+        run: |
+          # Создаем файл настроек с путями, чтобы Gradle не гадал
+          echo "ndk.dir=${ANDROID_HOME}/ndk/26.1.10909125" > local.properties
+          echo "sdk.dir=${ANDROID_HOME}" >> local.properties
+          ./gradlew assembleDebug -x lint
