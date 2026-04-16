@@ -28,17 +28,18 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          # Используем NDK, который уже есть в системе (обычно это 25.x или 26.x)
-          export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk-bundle
+          # Находим путь к последнему установленному NDK автоматически
+          NDK_PATH=$(find $ANDROID_SDK_ROOT/ndk -maxdepth 1 -type d | sort -V | tail -n 1)
+          echo "Found NDK at: $NDK_PATH"
           
-          # Создаем local.properties автоматически с правильными путями
+          # Записываем его в local.properties
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-          echo "ndk.dir=$ANDROID_SDK_ROOT/ndk-bundle" >> local.properties
+          echo "ndk.dir=$NDK_PATH" >> local.properties
           
           # Настраиваем PATH для Go
           export PATH=$PATH:$(go env GOPATH)/bin
           
-          # Собираем
+          # Сборка с ограничением ресурсов для стабильности
           ./gradlew assembleDebug -x lint --no-daemon -Dorg.gradle.parallel=false -Dorg.gradle.workers.max=1
 
       - name: Upload APK
