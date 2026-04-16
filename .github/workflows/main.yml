@@ -23,18 +23,22 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Install NDK
-        run: |
-          ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125"
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build Debug APK
         run: |
-          echo "ndk.dir=${ANDROID_HOME}/ndk/26.1.10909125" > local.properties
+          # Используем NDK, который уже есть в системе (обычно это 25.x или 26.x)
+          export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk-bundle
+          
+          # Создаем local.properties автоматически с правильными путями
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          echo "ndk.dir=$ANDROID_SDK_ROOT/ndk-bundle" >> local.properties
+          
+          # Настраиваем PATH для Go
           export PATH=$PATH:$(go env GOPATH)/bin
-          # Запускаем сборку без демона и с принудительным ограничением потоков
+          
+          # Собираем
           ./gradlew assembleDebug -x lint --no-daemon -Dorg.gradle.parallel=false -Dorg.gradle.workers.max=1
 
       - name: Upload APK
