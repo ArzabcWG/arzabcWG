@@ -1,4 +1,3 @@
-
 name: Build ArzabcWG APK
 
 on:
@@ -19,11 +18,11 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # Устанавливаем Go, без него WireGuard не соберет туннель
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
+          cache: false # Отключим кэш для первой чистой сборки
 
       - name: Install NDK
         run: |
@@ -36,4 +35,6 @@ jobs:
         run: |
           echo "ndk.dir=${ANDROID_HOME}/ndk/26.1.10909125" > local.properties
           echo "sdk.dir=${ANDROID_HOME}" >> local.properties
+          # Добавляем путь к Go в PATH прямо перед сборкой
+          export PATH=$PATH:$(go env GOPATH)/bin
           ./gradlew assembleDebug -x lint
