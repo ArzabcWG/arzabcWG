@@ -1,3 +1,4 @@
+
 name: Build ArzabcWG APK
 
 on:
@@ -18,9 +19,14 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      # Устанавливаем Go, без него WireGuard не соберет туннель
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
       - name: Install NDK
         run: |
-          # Используем прямой путь к sdkmanager в GitHub Actions
           ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125"
 
       - name: Grant execute permission for gradlew
@@ -28,7 +34,6 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          # Создаем файл настроек с путями, чтобы Gradle не гадал
           echo "ndk.dir=${ANDROID_HOME}/ndk/26.1.10909125" > local.properties
           echo "sdk.dir=${ANDROID_HOME}" >> local.properties
           ./gradlew assembleDebug -x lint
